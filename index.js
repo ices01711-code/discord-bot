@@ -8,39 +8,44 @@ const {
   StringSelectMenuBuilder,
   EmbedBuilder
 } = require("discord.js");
-const shopEmbed = new EmbedBuilder()
-  .setTitle("🛒 ICE SHOP")
-  .setDescription("บริการจำหน่ายไอดีเกมราคาถูก")
-  .setFooter({
-    text: "ICE SHOP | บริการจำหน่ายไอดีเกมราคาถูก",
-    iconURL: "https://img5.pic.in.th/file/secure-sv1/file_000000009abc622f8c05295909c167e1.md.png"
-  });
 
+/* ===== Client ===== */
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
+
+/* ===== Embed ร้าน ===== */
+const FOOTER = {
+  text: "ICE SHOP | บริการจำหน่ายไอดีเกมราคาถูก",
+  iconURL: "https://img5.pic.in.th/file/secure-sv1/file_000000009abc622f8c05295909c167e1.md.png"
+};
+
+const shopEmbed = new EmbedBuilder()
+  .setTitle("🛒 ICE SHOP")
+  .setDescription("บริการจำหน่ายไอดีเกมราคาถูก")
+  .setFooter(FOOTER);
 
 /* ===== Slash Command ===== */
 const commands = [
   new SlashCommandBuilder()
     .setName("service")
-    .setDescription("รายการบริการทั้งหมด")
+    .setDescription("ดูรายการบริการทั้งหมด")
 ].map(c => c.toJSON());
 
-/* ===== Register ===== */
+/* ===== Register Command ===== */
 client.once("ready", async () => {
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   await rest.put(
     Routes.applicationCommands(client.user.id),
     { body: commands }
   );
-  console.log("Bot ready");
+  console.log(`Bot ready: ${client.user.tag}`);
 });
 
 /* ===== Interaction ===== */
 client.on("interactionCreate", async (interaction) => {
 
-  // /service → ส่งเมนูให้กด (public)
+  /* ===== /service ===== */
   if (interaction.isChatInputCommand() && interaction.commandName === "service") {
 
     const menu = new StringSelectMenuBuilder()
@@ -68,12 +73,13 @@ client.on("interactionCreate", async (interaction) => {
       );
 
     await interaction.reply({
-      content: "📌 เลือกรายการบริการ (กดแล้วเห็นคนเดียว)",
+      embeds: [shopEmbed],
+      content: "📌 เลือกรายการบริการ (กดแล้วเห็นเฉพาะคุณ)",
       components: [new ActionRowBuilder().addComponents(menu)]
     });
   }
 
-  // ===== เลือกเมนู =====
+  /* ===== Select Menu ===== */
   if (interaction.isStringSelectMenu() && interaction.customId === "service_menu") {
 
     const data = {
@@ -159,7 +165,8 @@ Dojo 3 วัน 100฿
 
     const embed = new EmbedBuilder()
       .setTitle("📋 รายละเอียดบริการ")
-      .setDescription(data[interaction.values[0]]);
+      .setDescription(data[interaction.values[0]])
+      .setFooter(FOOTER);
 
     await interaction.reply({
       embeds: [embed],
@@ -168,4 +175,5 @@ Dojo 3 วัน 100฿
   }
 });
 
+/* ===== Login ===== */
 client.login(process.env.TOKEN);
