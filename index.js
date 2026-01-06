@@ -1,3 +1,10 @@
+const shopEmbed = new EmbedBuilder()
+  .setTitle("🛒 ICE SHOP")
+  .setDescription("บริการจำหน่ายไอดีเกมราคาถูก")
+  .setFooter({
+    text: "ICE SHOP | บริการจำหน่ายไอดีเกมราคาถูก",
+    iconURL: "https://img5.pic.in.th/file/secure-sv1/file_000000009abc622f8c05295909c167e1.md.png"
+  });
 const {
   Client,
   GatewayIntentBits,
