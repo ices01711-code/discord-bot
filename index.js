@@ -5,8 +5,7 @@ const {
   Routes,
   REST,
   ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
+  StringSelectMenuBuilder,
   EmbedBuilder
 } = require("discord.js");
 
@@ -17,81 +16,147 @@ const client = new Client({
 /* ===== Slash Command ===== */
 const commands = [
   new SlashCommandBuilder()
-    .setName("panel")
-    .setDescription("ส่งแผงข้อมูลให้กดดู")
-].map(cmd => cmd.toJSON());
+    .setName("service")
+    .setDescription("รายการบริการทั้งหมด")
+].map(c => c.toJSON());
 
-/* ===== Register Command ===== */
+/* ===== Register ===== */
 client.once("ready", async () => {
-  console.log(`ออนไลน์แล้ว: ${client.user.tag}`);
-
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   await rest.put(
     Routes.applicationCommands(client.user.id),
     { body: commands }
   );
-
-  console.log("ลงทะเบียน /panel เรียบร้อย");
+  console.log("Bot ready");
 });
 
 /* ===== Interaction ===== */
 client.on("interactionCreate", async (interaction) => {
 
-  // /panel → ส่งข้อความค้างไว้
-  if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === "panel") {
+  // /service → ส่งเมนูให้กด (public)
+  if (interaction.isChatInputCommand() && interaction.commandName === "service") {
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("rules_btn")
-          .setLabel("📜 กติกา")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId("howto_btn")
-          .setLabel("📘 วิธีใช้งาน")
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId("contact_btn")
-          .setLabel("📞 ติดต่อ")
-          .setStyle(ButtonStyle.Success)
+    const menu = new StringSelectMenuBuilder()
+      .setCustomId("service_menu")
+      .setPlaceholder("เลือกบริการที่ต้องการดู")
+      .addOptions(
+        { label: "รับฟาร์มเวล", value: "level" },
+        { label: "ฟาร์มเงิน", value: "money" },
+        { label: "ฟาร์มเงินม่วง", value: "purple" },
+        { label: "มาสเตอรี่หมัด", value: "fist" },
+        { label: "มาสเตอรี่ดาบ", value: "sword" },
+        { label: "มาสเตอรี่ผล", value: "fruit" },
+        { label: "มาสเตอรี่ปืน", value: "gun" },
+        { label: "ฟาร์มกระดูก", value: "bone" },
+        { label: "ผลตื่น", value: "awake" },
+        { label: "ทำหมัด", value: "martial" },
+        { label: "หาดาบ", value: "findsword" },
+        { label: "หาปืน", value: "findgun" },
+        { label: "ของตกแต่ง", value: "cosmetic" },
+        { label: "เผ่า V3", value: "v3" },
+        { label: "อีเว้นมังกร / Dojo", value: "dragon" },
+        { label: "เผ่า V4", value: "v4" },
+        { label: "ฮาคิสังเกต", value: "haki" },
+        { label: "ชิ้นส่วน / คราฟ", value: "craft" }
       );
 
-      const embed = new EmbedBuilder()
-        .setTitle("📢 ข้อมูลเซิร์ฟเวอร์")
-        .setDescription("กดปุ่มด้านล่างเพื่อดูรายละเอียด\n(เห็นเฉพาะคนที่กด)");
-
-      await interaction.reply({
-        embeds: [embed],
-        components: [row]
-      });
-    }
+    await interaction.reply({
+      content: "📌 เลือกรายการบริการ (กดแล้วเห็นคนเดียว)",
+      components: [new ActionRowBuilder().addComponents(menu)]
+    });
   }
 
-  // ===== ปุ่ม =====
-  if (interaction.isButton()) {
-    let embed;
+  // ===== เลือกเมนู =====
+  if (interaction.isStringSelectMenu() && interaction.customId === "service_menu") {
 
-    if (interaction.customId === "rules_btn") {
-      embed = new EmbedBuilder()
-        .setTitle("📜 กติกา")
-        .setDescription("1. ห้ามสแปม\n2. ห้ามด่ากัน");
-    }
+    const data = {
+      cosmetic: `ผ้าคลุมคาตาคุริ 5฿
+หมวกบอสนก 10฿
+หมวกแอดมิน 15฿
+ผ้าคลุมหนวดดำ 40฿`,
 
-    if (interaction.customId === "howto_btn") {
-      embed = new EmbedBuilder()
-        .setTitle("📘 วิธีใช้งาน")
-        .setDescription("ใช้คำสั่ง /panel เพื่อเรียกแผงนี้");
-    }
+      level: `Lv1-700 = 15฿
+Lv700-1500 = 25฿
+Lv1500-MAX = 70฿
+Lv700-MAX = 100฿
+Lv1-MAX = 140฿`,
 
-    if (interaction.customId === "contact_btn") {
-      embed = new EmbedBuilder()
-        .setTitle("📞 ติดต่อ")
-        .setDescription("@Admin");
-    }
+      money: `1M มี x2 = 5฿
+1M ไม่มี x2 = 7฿
+10M มี x2 = 20฿
+10M ไม่มี x2 = 30฿`,
+
+      purple: `1k = 2฿
+10k = 15฿`,
+
+      fist: `Mas 10 = 1฿
+Mas 1-300 = 20฿
+Mas 1-600 = 40฿`,
+
+      sword: `Mas 1-300 = 20฿
+Mas 1-600 = 40฿`,
+
+      fruit: `Mas 1-300 = 30฿
+Mas 1-600 = 50฿`,
+
+      gun: `Mas 1-300 = 30฿
+Mas 1-600 = 50฿`,
+
+      bone: `1000 = 5฿
+5000 = 20฿
+10k = 35฿`,
+
+      awake: `ผลตื่นทุกสกิล 20฿ (สกิลละ 5฿)
+โมจิ / ฟีนิกซ์ 30฿
+เปิดดัน +10฿`,
+
+      martial: `Superhuman 20฿
+Death Step 15฿
+Karate V2 15฿
+Dragon Talon 20฿
+Electric Claw V2 15฿
+God Human 30฿`,
+
+      findsword: `สมอ 50฿
+ดาบคู่ 40฿
+สามดาบ 30฿
+เคียว 20฿
+บิ๊กมัม 20฿`,
+
+      findgun: `Serpent Bow 15฿
+ปืนทั่วไป 5฿
+ปืนพิษ 15฿
+กีต้าบรู๊ค 30฿`,
+
+      v3: `มนุษย์ / สกาย / มิ้ง / เงือก 15฿
+ไซ 50฿
+กูล 25฿`,
+
+      dragon: `V1-3 ขั้นละ 30฿
+V1 รวม Dojo 120฿
+V3 รวม Dojo 300฿
+Dojo 3 วัน 100฿
+ไอเท่มมังกร เริ่ม 10฿`,
+
+      v4: `เหมาทำ T10 = 80฿
+ขั้น 1-5 = 20฿
+ขั้น 6-10 = 10฿`,
+
+      haki: `ฮาคิ V1 = 20฿
+ฮาคิ V2 = 25฿
+ฟาม 1000 = 10฿`,
+
+      craft: `Dark Fragment 15฿
+เศษอื่น 10 ชิ้น = 1฿`
+    };
+
+    const embed = new EmbedBuilder()
+      .setTitle("📋 รายละเอียดบริการ")
+      .setDescription(data[interaction.values[0]]);
 
     await interaction.reply({
       embeds: [embed],
-      ephemeral: true // 👈 เห็นคนเดียว
+      ephemeral: true
     });
   }
 });
