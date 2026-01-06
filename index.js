@@ -13,12 +13,14 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
+// ===== Slash Command =====
 const commands = [
   new SlashCommandBuilder()
     .setName("info")
     .setDescription("ดูข้อมูลต่าง ๆ")
 ].map(cmd => cmd.toJSON());
 
+// ===== Register Command =====
 client.once("ready", async () => {
   console.log(`ออนไลน์แล้ว: ${client.user.tag}`);
 
@@ -31,9 +33,13 @@ client.once("ready", async () => {
   console.log("ลงทะเบียน /info เรียบร้อย");
 });
 
+// ===== Interaction =====
 client.on("interactionCreate", async (interaction) => {
+
+  // /info
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "info") {
+
       const menu = new StringSelectMenuBuilder()
         .setCustomId("info_menu")
         .setPlaceholder("เลือกหัวข้อ")
@@ -53,6 +59,7 @@ client.on("interactionCreate", async (interaction) => {
     }
   }
 
+  // Select Menu
   if (interaction.isStringSelectMenu()) {
     let embed;
 
@@ -77,37 +84,6 @@ client.on("interactionCreate", async (interaction) => {
     await interaction.reply({
       embeds: [embed],
       ephemeral: true
-    });
-  }
-});
-
-client.login(process.env.TOKEN);
-    await msg.reply({
-      content: "กรุณาเลือกรายการ",
-      components: [row]
-    });
-  }
-});
-
-client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isStringSelectMenu()) return;
-
-  if (interaction.customId === "info_menu") {
-    let replyText = "";
-
-    if (interaction.values[0] === "rules") {
-      replyText = "📌 กติกาเซิร์ฟเวอร์\n1. ห้ามสแปม\n2. ห้ามด่ากัน";
-    }
-    if (interaction.values[0] === "howto") {
-      replyText = "📘 วิธีใช้งาน\nใช้คำสั่ง !info เพื่อดูข้อมูล";
-    }
-    if (interaction.values[0] === "contact") {
-      replyText = "📞 ติดต่อแอดมิน\n@Admin";
-    }
-
-    await interaction.reply({
-      content: replyText,
-      ephemeral: true // เห็นเฉพาะคนกด
     });
   }
 });
