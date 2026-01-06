@@ -5,7 +5,8 @@ const {
   Routes,
   REST,
   ActionRowBuilder,
-  StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   EmbedBuilder
 } = require("discord.js");
 
@@ -13,14 +14,14 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-// ===== Slash Command =====
+/* ===== Slash Command ===== */
 const commands = [
   new SlashCommandBuilder()
-    .setName("info")
-    .setDescription("ดูข้อมูลต่าง ๆ")
+    .setName("panel")
+    .setDescription("ส่งแผงข้อมูลให้กดดู")
 ].map(cmd => cmd.toJSON());
 
-// ===== Register Command =====
+/* ===== Register Command ===== */
 client.once("ready", async () => {
   console.log(`ออนไลน์แล้ว: ${client.user.tag}`);
 
@@ -30,52 +31,59 @@ client.once("ready", async () => {
     { body: commands }
   );
 
-  console.log("ลงทะเบียน /info เรียบร้อย");
+  console.log("ลงทะเบียน /panel เรียบร้อย");
 });
 
-// ===== Interaction =====
+/* ===== Interaction ===== */
 client.on("interactionCreate", async (interaction) => {
 
-  // /info
+  // /panel → ส่งข้อความค้างไว้
   if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === "info") {
+    if (interaction.commandName === "panel") {
 
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId("info_menu")
-        .setPlaceholder("เลือกหัวข้อ")
-        .addOptions(
-          { label: "📜 กติกา", value: "rules" },
-          { label: "📘 วิธีใช้งาน", value: "howto" },
-          { label: "📞 ติดต่อ", value: "contact" }
-        );
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("rules_btn")
+          .setLabel("📜 กติกา")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("howto_btn")
+          .setLabel("📘 วิธีใช้งาน")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId("contact_btn")
+          .setLabel("📞 ติดต่อ")
+          .setStyle(ButtonStyle.Success)
+      );
 
-      const row = new ActionRowBuilder().addComponents(menu);
+      const embed = new EmbedBuilder()
+        .setTitle("📢 ข้อมูลเซิร์ฟเวอร์")
+        .setDescription("กดปุ่มด้านล่างเพื่อดูรายละเอียด\n(เห็นเฉพาะคนที่กด)");
 
       await interaction.reply({
-        content: "เลือกหัวข้อที่ต้องการ",
-        components: [row],
-        ephemeral: true
+        embeds: [embed],
+        components: [row]
       });
     }
   }
 
-  // Select Menu
-  if (interaction.isStringSelectMenu()) {
+  // ===== ปุ่ม =====
+  if (interaction.isButton()) {
     let embed;
 
-    if (interaction.values[0] === "rules") {
+    if (interaction.customId === "rules_btn") {
       embed = new EmbedBuilder()
         .setTitle("📜 กติกา")
-        .setDescription("1. ห้ามสแปม\n2. ห้ามด่า");
+        .setDescription("1. ห้ามสแปม\n2. ห้ามด่ากัน");
     }
 
-    if (interaction.values[0] === "howto") {
+    if (interaction.customId === "howto_btn") {
       embed = new EmbedBuilder()
         .setTitle("📘 วิธีใช้งาน")
-        .setDescription("ใช้คำสั่ง /info");
+        .setDescription("ใช้คำสั่ง /panel เพื่อเรียกแผงนี้");
     }
 
-    if (interaction.values[0] === "contact") {
+    if (interaction.customId === "contact_btn") {
       embed = new EmbedBuilder()
         .setTitle("📞 ติดต่อ")
         .setDescription("@Admin");
@@ -83,7 +91,7 @@ client.on("interactionCreate", async (interaction) => {
 
     await interaction.reply({
       embeds: [embed],
-      ephemeral: true
+      ephemeral: true // 👈 เห็นคนเดียว
     });
   }
 });
